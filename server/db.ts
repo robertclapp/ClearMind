@@ -752,3 +752,74 @@ export async function archiveComment(id: number) {
   await db.update(comments).set({ archived: true }).where(eq(comments.id, id));
   return { success: true };
 }
+
+
+// ============================================================================
+// AUTOMATION FUNCTIONS
+// ============================================================================
+
+/**
+ * Create a new automation.
+ */
+export async function createAutomation(automation: InsertAutomation) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(automations).values(automation);
+  const insertId = (result as any).insertId;
+  return { id: Number(insertId), ...automation };
+}
+
+/**
+ * Get all automations for a user.
+ */
+export async function getAutomationsByUser(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db
+    .select()
+    .from(automations)
+    .where(eq(automations.createdBy, userId))
+    .orderBy(desc(automations.createdAt));
+}
+
+/**
+ * Get enabled automations for a specific trigger.
+ */
+export async function getEnabledAutomationsByTrigger(userId: number, trigger: string) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db
+    .select()
+    .from(automations)
+    .where(
+      and(
+        eq(automations.createdBy, userId),
+        eq(automations.trigger, trigger),
+        eq(automations.enabled, true)
+      )
+    );
+}
+
+/**
+ * Update automation.
+ */
+export async function updateAutomation(id: number, updates: Partial<InsertAutomation>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.update(automations).set(updates).where(eq(automations.id, id));
+}
+
+/**
+ * Delete automation.
+ */
+export async function deleteAutomation(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.delete(automations).where(eq(automations.id, id));
+  return { success: true };
+}

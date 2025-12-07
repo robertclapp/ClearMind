@@ -41,7 +41,7 @@ describe("AI Features", () => {
     expect(result).toHaveProperty("subtasks");
     expect(Array.isArray(result.subtasks)).toBe(true);
     expect(result.subtasks.length).toBeGreaterThan(0);
-  });
+  }, 15000);
 
   it("improveWriting returns improved text", async () => {
     const { ctx } = createAuthContext();

@@ -813,6 +813,89 @@ export const appRouter = router({
         return { url: result.url };
       }),
   }),
+
+  // ============================================================================
+  // AUTOMATIONS
+  // ============================================================================
+
+  automations: router({
+    /**
+     * Create a new automation.
+     */
+    create: protectedProcedure
+      .input(z.object({
+        name: z.string(),
+        trigger: z.string(),
+        conditions: z.string(),
+        actions: z.string(),
+        enabled: z.boolean().default(true),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        // Get user's first workspace (or create one if needed)
+        const workspaces = await db.getWorkspacesByOwner(ctx.user.id);
+        let workspaceId = workspaces[0]?.id;
+        
+        if (!workspaceId) {
+          const workspace = await db.createWorkspace({
+            name: "My Workspace",
+            ownerId: ctx.user.id,
+          });
+          workspaceId = workspace.id;
+        }
+        
+        const automation = await db.createAutomation({
+          workspaceId,
+          createdBy: ctx.user.id,
+          name: input.name,
+          trigger: input.trigger,
+          conditions: input.conditions,
+          actions: input.actions,
+          enabled: input.enabled,
+        });
+        return automation;
+      }),
+
+    /**
+     * List all automations for current user.
+     */
+    list: protectedProcedure
+      .query(async ({ ctx }) => {
+        return await db.getAutomationsByUser(ctx.user.id);
+      }),
+
+    /**
+     * Update automation.
+     */
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        trigger: z.string().optional(),
+        conditions: z.string().optional(),
+        actions: z.string().optional(),
+        enabled: z.boolean().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.updateAutomation(input.id, {
+          name: input.name,
+          trigger: input.trigger,
+          conditions: input.conditions,
+          actions: input.actions,
+          enabled: input.enabled,
+        });
+        return { success: true };
+      }),
+
+    /**
+     * Delete automation.
+     */
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteAutomation(input.id);
+        return { success: true };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

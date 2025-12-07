@@ -26,6 +26,7 @@ import {
   X,
   Plus,
   ChevronRight,
+  Zap,
 } from 'lucide-react';
 import { APP_NAME } from '@shared/const';
 
@@ -60,6 +61,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     { href: '/databases', label: 'Databases', icon: Database },
     { href: '/timeline', label: 'Timeline', icon: Calendar },
     { href: '/mood', label: 'Mood Tracker', icon: Smile },
+    { href: '/automations', label: 'Automations', icon: Zap },
     { href: '/settings', label: 'Settings', icon: Settings },
   ];
 

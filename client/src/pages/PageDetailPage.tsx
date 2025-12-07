@@ -5,6 +5,7 @@ import { BlockEditor } from '@/components/BlockEditor';
 import { CollaborationIndicators, SyncStatusIndicator } from '@/components/CollaborationIndicators';
 import { CommentThread } from '@/components/CommentThread';
 import { trpc } from '@/lib/trpc';
+import { useWebSocket } from '@/hooks/useWebSocket';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Loader2, Save } from 'lucide-react';
@@ -28,10 +29,19 @@ export default function PageDetailPage() {
   const [content, setContent] = useState('');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  const { data: page, isLoading } = trpc.pages.getById.useQuery(
+  const { data: page, isLoading, refetch } = trpc.pages.getById.useQuery(
     { id: pageId },
     { enabled: pageId > 0 }
   );
+  
+  // Real-time collaboration
+  const { viewers, isConnected } = useWebSocket({
+    pageId,
+    onContentChange: () => {
+      // Refetch page data when content changes from other users
+      refetch();
+    },
+  });
 
   const { data: blocks } = trpc.blocks.getByPage.useQuery(
     { pageId },
