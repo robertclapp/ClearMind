@@ -1,39 +1,84 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch } from "wouter";
+import { Route, Switch, Redirect } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import Home from "./pages/Home";
+import { WorkspaceProvider } from "./contexts/WorkspaceContext";
+import { useAuth } from "./_core/hooks/useAuth";
+import { getLoginUrl } from "./const";
+import { useEffect } from "react";
+import { initOfflineStorage } from "./lib/offlineStorage";
+
+// Pages
+import HomePage from "./pages/HomePage";
+import PagesPage from "./pages/PagesPage";
+import PageDetailPage from "./pages/PageDetailPage";
+import TimelinePage from "./pages/TimelinePage";
+import SettingsPage from "./pages/SettingsPage";
+import DatabasesPage from "./pages/DatabasesPage";
+import DatabaseDetailPage from "./pages/DatabaseDetailPage";
+
+/**
+ * ProtectedRoute wrapper ensures user is authenticated.
+ */
+function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    window.location.href = getLoginUrl();
+    return null;
+  }
+
+  return <Component />;
+}
 
 function Router() {
-  // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
-      <Route path={"/"} component={Home} />
-      <Route path={"/404"} component={NotFound} />
-      {/* Final fallback route */}
+      <Route path="/" component={() => <Redirect to="/home" />} />
+      <Route path="/home" component={() => <ProtectedRoute component={HomePage} />} />
+      <Route path="/pages" component={() => <ProtectedRoute component={PagesPage} />} />
+      <Route path="/pages/:id" component={() => <ProtectedRoute component={PageDetailPage} />} />
+      <Route path="/databases" component={() => <ProtectedRoute component={DatabasesPage} />} />
+      <Route path="/databases/:id" component={() => <ProtectedRoute component={DatabaseDetailPage} />} />
+      <Route path="/timeline" component={() => <ProtectedRoute component={TimelinePage} />} />
+      <Route path="/settings" component={() => <ProtectedRoute component={SettingsPage} />} />
+      <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
   );
 }
 
-// NOTE: About Theme
-// - First choose a default theme according to your design style (dark or light bg), than change color palette in index.css
-//   to keep consistent foreground/background color across components
-// - If you want to make theme switchable, pass `switchable` ThemeProvider and use `useTheme` hook
-
 function App() {
+  // Initialize offline storage on app load
+  useEffect(() => {
+    initOfflineStorage();
+  }, []);
+
   return (
     <ErrorBoundary>
       <ThemeProvider
         defaultTheme="light"
-        // switchable
+        defaultSensoryProfile="adhd"
       >
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
+        <WorkspaceProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </WorkspaceProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );

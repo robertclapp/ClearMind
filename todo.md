@@ -1,0 +1,453 @@
+# ClearMind Development TODO
+
+## Phase 1: MVP Foundation (Months 1-3)
+
+### Project Setup & Infrastructure
+- [x] Update project branding from "Nexus Notes" to "ClearMind"
+- [x] Configure environment variables and secrets
+- [x] Set up database schema with migrations
+- [x] Configure TypeScript strict mode
+- [ ] Set up ESLint and Prettier
+- [x] Create component library structure
+
+### Database Schema
+- [x] Create workspaces table
+- [x] Create pages table with hierarchy support
+- [x] Create blocks table with JSON content
+- [x] Create databases table with schema definition
+- [x] Create databaseViews table
+- [x] Create databaseItems table with JSON properties
+- [x] Create timelineEvents table
+- [x] Create moodEntries table
+- [x] Create automations table
+- [x] Create notifications table
+- [x] Create comments table
+- [x] Add indexes for performance optimization
+- [x] Run initial migration
+
+### Authentication & User Management
+- [x] Implement Manus OAuth integration
+- [x] Create user profile management
+- [x] Add sensory profile preference to user settings
+- [x] Implement role-based access control (admin, user)
+- [ ] Create user onboarding flow
+
+### Block-Based Editor
+- [x] Set up Tiptap editor framework
+- [x] Implement text block type
+- [x] Implement heading block types (H1, H2, H3)
+- [x] Implement list block types (bulleted, numbered, checkbox)
+- [ ] Implement image block with upload
+- [x] Implement link block with preview
+- [x] Implement code block with syntax highlighting
+- [x] Implement quote block
+- [ ] Implement divider block
+- [ ] Add drag-and-drop reordering
+- [ ] Add block deletion and duplication
+- [x] Implement markdown shortcuts
+- [ ] Add slash commands for block insertion
+- [ ] Implement nested blocks (indentation)
+- [x] Add undo/redo functionality
+- [x] Implement offline storage with IndexedDB
+- [ ] Add auto-save functionality
+
+### Page Management
+- [x] Create page sidebar navigation
+- [x] Implement page creation
+- [x] Implement page hierarchy (parent-child relationships)
+- [x] Add page title editing
+- [x] Add page icon picker (emoji)
+- [x] Add page cover image
+- [ ] Implement page deletion (soft delete)
+- [ ] Add page archiving
+- [ ] Create page search functionality
+- [x] Implement recent pages list
+- [ ] Add favorites/starred pages
+- [ ] Create breadcrumb navigation
+
+### Basic Database System
+- [x] Create database creation flow
+- [x] Implement table view
+- [ ] Implement kanban board view
+- [x] Add property types: text, number, select, date, checkbox
+- [x] Implement property creation and editing
+- [x] Add database item creation
+- [x] Implement inline editing in table view
+- [ ] Add filtering functionality
+- [ ] Add sorting functionality
+- [ ] Implement database item deletion
+- [ ] Create inline database views in pages
+- [ ] Add database templates
+
+### Visual Timeline Planner
+- [x] Create daily timeline view
+- [x] Implement time block visualization
+- [x] Add color-coding for events
+- [x] Implement icon selection for events
+- [ ] Add drag-and-drop scheduling
+- [x] Link timeline events to database items
+- [x] Implement flexible time blocks (estimated duration)
+- [ ] Add grace period indicators
+- [x] Create timeline widget for quick access
+- [x] Implement timeline navigation (prev/next day)
+
+### Focus Timer
+- [ ] Create visual countdown timer component
+- [ ] Implement start/stop/pause functionality
+- [ ] Add customizable durations
+- [ ] Implement Pomodoro technique support
+- [ ] Add break reminders
+- [ ] Link timer to timeline events
+- [ ] Add completion tracking
+- [ ] Implement timer statistics
+
+### AI Features (MVP)
+- [x] Integrate Manus LLM API
+- [x] Implement AI task breakdown from text input
+- [ ] Create task breakdown UI component
+- [x] Add writing assistance (continue, improve, summarize)
+- [x] Integrate Manus Whisper API for voice transcription
+- [ ] Create voice recording component
+- [ ] Implement voice-to-block conversion
+- [x] Add AI loading states and error handling
+
+### Accessibility Foundation
+- [x] Implement semantic HTML structure
+- [ ] Add ARIA labels throughout application
+- [x] Create keyboard navigation system
+- [x] Add visible focus indicators
+- [ ] Implement skip navigation links
+- [ ] Add screen reader announcements for dynamic content
+- [x] Create high contrast mode (CSS variables)
+- [x] Add dyslexia-friendly font option (Atkinson Hyperlegible)
+- [x] Implement ADHD-optimized default theme
+- [ ] Add keyboard shortcuts documentation
+- [ ] Test with screen readers (NVDA, JAWS, VoiceOver)
+
+### Offline-First Architecture
+- [x] Set up IndexedDB for local storage
+- [x] Implement data persistence layer
+- [x] Create sync queue for offline operations
+- [ ] Implement online/offline detection
+- [ ] Add sync status indicators in UI
+- [ ] Create conflict resolution strategy
+- [ ] Implement incremental sync
+- [ ] Add background sync when online
+- [ ] Test offline functionality thoroughly
+
+### UI/UX Polish
+- [x] Design and implement landing page
+- [ ] Create onboarding tutorial
+- [ ] Add loading skeletons for async content
+- [x] Implement toast notifications
+- [ ] Add confirmation dialogs for destructive actions
+- [x] Create empty states for pages, databases, timeline
+- [ ] Add help tooltips and hints
+- [x] Implement responsive design for mobile
+- [ ] Add dark mode support (optional for MVP)
+
+---
+
+## Phase 2: Advanced Features (Months 4-6)
+
+### Advanced Database Views
+- [ ] Implement calendar view
+- [ ] Implement gallery view
+- [ ] Implement list view
+- [ ] Implement timeline view (Gantt-style)
+- [ ] Add view switching
+- [ ] Implement view-specific configurations
+- [ ] Add grouping functionality
+- [ ] Create database view templates
+
+### Time Tracking Property
+- [ ] Create time tracking property type
+- [ ] Implement start/stop timer for database items
+- [ ] Add automatic duration calculation
+- [ ] Create time tracking visualization
+- [ ] Integrate with visual timeline
+- [ ] Add time tracking reports
+- [ ] Implement time estimates vs. actuals
+
+### Relation & Rollup Properties
+- [ ] Implement relation property type
+- [ ] Add relation picker UI
+- [ ] Create smart relation sorting (exact-match priority)
+- [ ] Implement rollup property type
+- [ ] Add aggregation functions (sum, avg, count, etc.)
+- [ ] Create relation visualization
+
+### Smart Automations
+- [ ] Create automation builder UI
+- [ ] Implement trigger types (database change, scheduled, button)
+- [ ] Add conditional logic (if-then-else)
+- [ ] Implement action types (update property, send notification, create item)
+- [ ] Add auto-linking based on matching properties
+- [ ] Create automation templates
+- [ ] Implement automation execution engine
+- [ ] Add automation history and logs
+
+### Sensory Profile Themes
+- [ ] Implement theme switching system
+- [ ] Create ADHD-Optimized theme (default)
+- [ ] Create High Contrast theme
+- [ ] Create Dyslexia-Friendly theme
+- [ ] Create Low Stimulation theme
+- [ ] Create Standard theme
+- [ ] Add theme preview in settings
+- [ ] Persist theme preference per user
+- [ ] Respect prefers-reduced-motion
+
+### Mood Tracking
+- [ ] Create mood check-in component
+- [ ] Implement mood entry creation
+- [ ] Add mood visualization (charts over time)
+- [ ] Link mood to timeline events
+- [ ] Implement mood patterns analysis
+- [ ] Add daily reflection prompts
+- [ ] Create mood insights dashboard
+
+### Native Charts & Reporting
+- [ ] Implement chart builder UI
+- [ ] Add bar chart type
+- [ ] Add line chart type
+- [ ] Add pie chart type
+- [ ] Add progress indicators
+- [ ] Implement drag-and-drop chart creation
+- [ ] Add chart embedding in pages
+- [ ] Create chart templates
+- [ ] Implement real-time chart updates
+
+### Image Generation
+- [ ] Integrate Manus Image Generation API
+- [ ] Create image generation UI component
+- [ ] Add prompt input and style options
+- [ ] Implement image editing (regenerate, refine)
+- [ ] Add generated images to pages and databases
+- [ ] Create custom timeline icons with AI
+- [ ] Add image generation loading states
+
+### Database Import/Export
+- [ ] Implement CSV import
+- [ ] Implement CSV export
+- [ ] Add Notion import (JSON format)
+- [ ] Implement JSON export
+- [ ] Create import mapping UI
+- [ ] Add export options (filtered, all data)
+
+---
+
+## Phase 3: Collaboration & Polish (Months 7-9)
+
+### Real-Time Collaboration
+- [ ] Implement polling-based sync (2-3 second intervals)
+- [ ] Add presence indicators (who's viewing)
+- [ ] Implement @mentions in blocks
+- [ ] Create comments system
+- [ ] Add comment threads
+- [ ] Implement task assignment
+- [ ] Create activity feed
+- [ ] Add conflict resolution for simultaneous edits
+- [ ] Implement collaborative cursor (optional)
+
+### Notification System
+- [ ] Create notification data model
+- [ ] Implement in-app notifications
+- [ ] Add email notifications (optional)
+- [ ] Implement browser push notifications
+- [ ] Add notification preferences in settings
+- [ ] Create deadline reminders
+- [ ] Add mention alerts
+- [ ] Implement do not disturb mode
+- [ ] Add notification history
+
+### Advanced AI Features
+- [ ] Implement brainstorming and ideation
+- [ ] Add auto-categorization and tagging
+- [ ] Create smart suggestions for related content
+- [ ] Implement optimal scheduling recommendations
+- [ ] Add AI-powered search
+- [ ] Create AI writing templates
+
+### Mobile PWA Optimization
+- [ ] Implement responsive design for all components
+- [ ] Add mobile-specific gestures (swipe, pinch)
+- [ ] Create mobile navigation patterns
+- [ ] Optimize touch targets for mobile
+- [ ] Add PWA manifest
+- [ ] Implement service worker for offline
+- [ ] Add install prompt for PWA
+- [ ] Test on iOS and Android devices
+
+### Performance Optimization
+- [ ] Implement lazy loading for pages
+- [ ] Add virtual scrolling for large lists
+- [ ] Optimize image loading (lazy, responsive)
+- [ ] Implement code splitting
+- [ ] Add bundle size optimization
+- [ ] Create performance monitoring
+- [ ] Optimize database queries
+- [ ] Add caching strategies
+
+### Sharing & Permissions
+- [ ] Implement page sharing
+- [ ] Add permission levels (view, edit, admin)
+- [ ] Create share link generation
+- [ ] Add password protection for shared links
+- [ ] Implement team workspaces
+- [ ] Add workspace member management
+- [ ] Create permission inheritance
+
+---
+
+## Phase 4: Growth & Scale (Months 10-12)
+
+### Electron Desktop Apps
+- [ ] Set up Electron build configuration
+- [ ] Create Windows installer
+- [ ] Create macOS installer
+- [ ] Create Linux AppImage
+- [ ] Add auto-update functionality
+- [ ] Implement native menus
+- [ ] Add system tray integration
+- [ ] Test on all platforms
+
+### Advanced Collaboration
+- [ ] Upgrade to WebSocket for real-time sync
+- [ ] Implement operational transformation
+- [ ] Add team analytics dashboard
+- [ ] Create admin controls
+- [ ] Implement audit logs
+- [ ] Add usage statistics
+
+### API & Integrations
+- [ ] Create public API documentation
+- [ ] Implement API authentication (API keys)
+- [ ] Add webhook support
+- [ ] Create Zapier integration
+- [ ] Add Google Calendar sync
+- [ ] Implement Outlook Calendar sync
+- [ ] Create Slack integration
+
+### Community Features
+- [ ] Create template gallery
+- [ ] Implement template sharing
+- [ ] Add community templates
+- [ ] Create user showcase
+- [ ] Implement referral program
+
+### Marketing & Growth
+- [ ] Launch Product Hunt campaign
+- [ ] Create demo videos
+- [ ] Write blog posts and tutorials
+- [ ] Build social media presence
+- [ ] Create case studies
+- [ ] Implement analytics tracking
+- [ ] Add A/B testing framework
+
+---
+
+## Testing & Quality Assurance
+
+### Unit Tests
+- [ ] Write tests for database functions
+- [ ] Write tests for tRPC procedures
+- [ ] Write tests for utility functions
+- [ ] Write tests for sync engine
+- [ ] Achieve 80%+ code coverage
+
+### Integration Tests
+- [ ] Test authentication flow
+- [ ] Test page creation and editing
+- [ ] Test database operations
+- [ ] Test timeline functionality
+- [ ] Test offline sync
+
+### Accessibility Tests
+- [ ] Run axe-core accessibility tests
+- [ ] Test keyboard navigation
+- [ ] Test screen reader compatibility
+- [ ] Test with high contrast mode
+- [ ] Test with reduced motion
+- [ ] Manual testing with assistive technologies
+
+### E2E Tests
+- [ ] Test user onboarding flow
+- [ ] Test page creation and editing
+- [ ] Test database creation and views
+- [ ] Test timeline planning
+- [ ] Test offline functionality
+- [ ] Test collaboration features
+
+### Performance Tests
+- [ ] Test with large workspaces (1000+ pages)
+- [ ] Test with large databases (10,000+ items)
+- [ ] Measure page load times
+- [ ] Measure time to interactive
+- [ ] Test sync performance
+
+---
+
+## CI/CD & Deployment
+
+### GitHub Actions
+- [x] Set up CI pipeline (lint, test, build)
+- [x] Add automated testing on PR
+- [x] Implement CD pipeline for main branch
+- [ ] Add deployment to Manus hosting
+- [ ] Create staging environment
+
+### Monitoring & Logging
+- [ ] Set up error tracking (Sentry)
+- [ ] Implement performance monitoring
+- [ ] Add user analytics (privacy-respecting)
+- [ ] Create logging system
+- [ ] Set up alerts for critical errors
+
+---
+
+## Documentation
+
+### User Documentation
+- [ ] Write getting started guide
+- [ ] Create feature tutorials
+- [ ] Add keyboard shortcuts reference
+- [ ] Write accessibility guide
+- [ ] Create video tutorials
+- [ ] Build help center
+
+### Developer Documentation
+- [x] Write architecture overview
+- [x] Document database schema
+- [x] Create API documentation
+- [ ] Write contribution guidelines
+- [x] Document deployment process
+- [x] Create troubleshooting guide
+
+---
+
+## Marketing & Launch
+
+### Pre-Launch
+- [ ] Create landing page
+- [ ] Build email waitlist
+- [ ] Create demo video
+- [ ] Write launch blog post
+- [ ] Prepare social media content
+- [ ] Reach out to influencers
+
+### Launch
+- [ ] Launch on Product Hunt
+- [ ] Post on Reddit (r/ADHD, r/autism, r/productivity, r/Notion)
+- [ ] Share on Twitter/X
+- [ ] Post on LinkedIn
+- [ ] Submit to app directories
+- [ ] Send press releases
+
+### Post-Launch
+- [ ] Gather user feedback
+- [ ] Create case studies
+- [ ] Build community (Discord, subreddit)
+- [ ] Content marketing (blog posts)
+- [ ] Partnerships with neurodivergent organizations
+- [ ] Referral program launch

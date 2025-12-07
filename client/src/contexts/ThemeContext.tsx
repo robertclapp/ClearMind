@@ -2,10 +2,18 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 
 type Theme = "light" | "dark";
 
+/**
+ * Sensory profile theme options for ClearMind.
+ * Each theme is optimized for different accessibility needs.
+ */
+export type SensoryProfile = "adhd" | "highContrast" | "dyslexia" | "lowStim" | "standard";
+
 interface ThemeContextType {
   theme: Theme;
   toggleTheme?: () => void;
   switchable: boolean;
+  sensoryProfile: SensoryProfile;
+  setSensoryProfile: (profile: SensoryProfile) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -14,12 +22,14 @@ interface ThemeProviderProps {
   children: React.ReactNode;
   defaultTheme?: Theme;
   switchable?: boolean;
+  defaultSensoryProfile?: SensoryProfile;
 }
 
 export function ThemeProvider({
   children,
   defaultTheme = "light",
   switchable = false,
+  defaultSensoryProfile = "adhd",
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(() => {
     if (switchable) {
@@ -27,6 +37,12 @@ export function ThemeProvider({
       return (stored as Theme) || defaultTheme;
     }
     return defaultTheme;
+  });
+
+  const [sensoryProfile, setSensoryProfile] = useState<SensoryProfile>(() => {
+    if (typeof window === "undefined") return defaultSensoryProfile;
+    const stored = localStorage.getItem("clearmind-sensory-profile");
+    return (stored as SensoryProfile) || defaultSensoryProfile;
   });
 
   useEffect(() => {
@@ -37,10 +53,14 @@ export function ThemeProvider({
       root.classList.remove("dark");
     }
 
+    // Set sensory profile data attribute
+    root.setAttribute("data-theme", sensoryProfile);
+
     if (switchable) {
       localStorage.setItem("theme", theme);
     }
-  }, [theme, switchable]);
+    localStorage.setItem("clearmind-sensory-profile", sensoryProfile);
+  }, [theme, switchable, sensoryProfile]);
 
   const toggleTheme = switchable
     ? () => {
@@ -49,7 +69,7 @@ export function ThemeProvider({
     : undefined;
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, switchable }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, switchable, sensoryProfile, setSensoryProfile }}>
       {children}
     </ThemeContext.Provider>
   );
