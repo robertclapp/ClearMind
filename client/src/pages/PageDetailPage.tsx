@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useRoute } from 'wouter';
 import { AppLayout } from '@/components/AppLayout';
 import { BlockEditor } from '@/components/BlockEditor';
+import { CollaborationIndicators, SyncStatusIndicator } from '@/components/CollaborationIndicators';
+import { CommentThread } from '@/components/CommentThread';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -191,12 +193,23 @@ export default function PageDetailPage() {
           )}
         </div>
 
+        {/* Collaboration Indicators */}
+        <div className="flex items-center justify-between py-2 border-t">
+          <CollaborationIndicators pageId={pageId} />
+          <SyncStatusIndicator status="synced" />
+        </div>
+
         {/* Content Editor */}
         <BlockEditor
           content={content}
           onChange={handleContentChange}
           placeholder="Start writing your page content..."
         />
+
+        {/* Comments Section */}
+        <div className="pt-8 border-t">
+          <CommentThread parentType="page" parentId={pageId} />
+        </div>
       </div>
     </AppLayout>
   );

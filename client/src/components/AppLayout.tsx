@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { NotificationCenter } from '@/components/NotificationCenter';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -195,7 +196,8 @@ export function AppLayout({ children }: AppLayoutProps) {
           
           <div className="flex-1" />
 
-          {/* Future: Search, notifications, etc. */}
+          {/* Notifications */}
+          <NotificationCenter />
         </header>
 
         {/* Page Content */}
