@@ -18,6 +18,7 @@ import TimelinePage from "./pages/TimelinePage";
 import SettingsPage from "./pages/SettingsPage";
 import DatabasesPage from "./pages/DatabasesPage";
 import DatabaseDetailPage from "./pages/DatabaseDetailPage";
+import MoodTrackerPage from "./pages/MoodTrackerPage";
 
 /**
  * ProtectedRoute wrapper ensures user is authenticated.
@@ -54,6 +55,7 @@ function Router() {
       <Route path="/databases" component={() => <ProtectedRoute component={DatabasesPage} />} />
       <Route path="/databases/:id" component={() => <ProtectedRoute component={DatabaseDetailPage} />} />
       <Route path="/timeline" component={() => <ProtectedRoute component={TimelinePage} />} />
+      <Route path="/mood" component={() => <ProtectedRoute component={MoodTrackerPage} />} />
       <Route path="/settings" component={() => <ProtectedRoute component={SettingsPage} />} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

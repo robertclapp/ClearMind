@@ -552,6 +552,21 @@ export const appRouter = router({
       .query(async ({ input, ctx }) => {
         return await db.getMoodEntriesByDateRange(ctx.user.id, input.startDate, input.endDate);
       }),
+
+    /**
+     * Get recent mood entries.
+     */
+    getRecent: protectedProcedure
+      .input(z.object({
+        limit: z.number().optional(),
+      }))
+      .query(async ({ input, ctx }) => {
+        const limit = input.limit || 30;
+        const endDate = new Date();
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - 30);
+        return await db.getMoodEntriesByDateRange(ctx.user.id, startDate, endDate);
+      }),
   }),
 
   // ============================================================================
@@ -656,17 +671,47 @@ export const appRouter = router({
     breakdownTask: protectedProcedure
       .input(z.object({ taskDescription: z.string() }))
       .mutation(async ({ input }) => {
-        // AI integration will be implemented in next phase
-        // For now, return placeholder
-        return {
-          steps: [
+        const { invokeLLM } = await import("./_core/llm");
+        
+        const response = await invokeLLM({
+          messages: [
             {
-              title: "Step 1",
-              description: "First step of the task",
-              estimatedMinutes: 30,
+              role: "system",
+              content: "You are a helpful assistant that breaks down complex tasks into clear, actionable steps. Each step should be specific, achievable, and sequential. Return a JSON array of step descriptions as strings.",
+            },
+            {
+              role: "user",
+              content: `Break down this task into 5-8 manageable steps: ${input.taskDescription}`,
             },
           ],
-        };
+          response_format: {
+            type: "json_schema",
+            json_schema: {
+              name: "task_breakdown",
+              strict: true,
+              schema: {
+                type: "object",
+                properties: {
+                  steps: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "Array of step descriptions",
+                  },
+                },
+                required: ["steps"],
+                additionalProperties: false,
+              },
+            },
+          },
+        });
+
+        const content = response.choices[0]?.message?.content;
+        if (!content || typeof content !== 'string') {
+          throw new Error("No response from AI");
+        }
+
+        const parsed = JSON.parse(content);
+        return { subtasks: parsed.steps };
       }),
 
     /**
@@ -699,6 +744,55 @@ export const appRouter = router({
       }),
 
     /**
+     * Transcribe audio data to text using Whisper API.
+     */
+    transcribeAudio: protectedProcedure
+      .input(z.object({
+        audioData: z.string(), // Base64 encoded audio
+        format: z.enum(['webm', 'mp4', 'mp3', 'wav']),
+        language: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        try {
+          // Import transcription helper
+          const { transcribeAudio } = await import('./_core/voiceTranscription');
+          
+          // Convert base64 to buffer
+          const base64Data = input.audioData.split(',')[1] || input.audioData;
+          const audioBuffer = Buffer.from(base64Data, 'base64');
+          
+          // Create temporary file URL (in production, upload to S3 first)
+          // For now, we'll use the Manus storage API
+          const { storagePut } = await import('./storage');
+          const fileName = `voice-${Date.now()}.${input.format}`;
+          const { url } = await storagePut(
+            `voice-recordings/${fileName}`,
+            audioBuffer,
+            `audio/${input.format}`
+          );
+          
+          // Transcribe using Whisper
+          const result = await transcribeAudio({
+            audioUrl: url,
+            language: input.language,
+          });
+          
+          // Check if it's an error response
+          if ('error' in result) {
+            throw new Error(result.error);
+          }
+          
+          return {
+            text: result.text,
+            language: result.language,
+          };
+        } catch (error) {
+          console.error('Transcription error:', error);
+          throw new Error(`Transcription failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      }),
+
+    /**
      * Generate image from text prompt.
      */
     generateImage: protectedProcedure
@@ -707,10 +801,16 @@ export const appRouter = router({
         originalImage: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
-        // AI integration will be implemented in next phase
-        return {
-          url: "https://placeholder.com/generated-image.jpg",
-        };
+        const { generateImage } = await import("./_core/imageGeneration");
+        
+        const result = await generateImage({
+          prompt: input.prompt,
+          originalImages: input.originalImage
+            ? [{ url: input.originalImage, mimeType: "image/jpeg" }]
+            : undefined,
+        });
+        
+        return { url: result.url };
       }),
   }),
 });

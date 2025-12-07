@@ -1,6 +1,10 @@
 import { useRoute } from 'wouter';
 import { AppLayout } from '@/components/AppLayout';
 import { DatabaseTableView } from '@/components/DatabaseTableView';
+import { DatabaseKanbanView } from '@/components/DatabaseKanbanView';
+import { DatabaseCalendarView } from '@/components/DatabaseCalendarView';
+import { DatabaseGalleryView } from '@/components/DatabaseGalleryView';
+import { DatabaseListView } from '@/components/DatabaseListView';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -66,20 +70,21 @@ export default function DatabaseDetailPage() {
               <Table className="h-4 w-4" />
               Table
             </TabsTrigger>
-            <TabsTrigger value="kanban" className="flex items-center gap-2" disabled>
+            <TabsTrigger value="kanban" className="flex items-center gap-2">
               <LayoutGrid className="h-4 w-4" />
               Kanban
-              <span className="text-xs text-muted-foreground">(Coming Soon)</span>
             </TabsTrigger>
-            <TabsTrigger value="calendar" className="flex items-center gap-2" disabled>
+            <TabsTrigger value="calendar" className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
               Calendar
-              <span className="text-xs text-muted-foreground">(Coming Soon)</span>
             </TabsTrigger>
-            <TabsTrigger value="list" className="flex items-center gap-2" disabled>
+            <TabsTrigger value="gallery" className="flex items-center gap-2">
+              <LayoutGrid className="h-4 w-4" />
+              Gallery
+            </TabsTrigger>
+            <TabsTrigger value="list" className="flex items-center gap-2">
               <List className="h-4 w-4" />
               List
-              <span className="text-xs text-muted-foreground">(Coming Soon)</span>
             </TabsTrigger>
           </TabsList>
 
@@ -87,25 +92,20 @@ export default function DatabaseDetailPage() {
             <DatabaseTableView databaseId={databaseId} schema={schema} />
           </TabsContent>
 
-          <TabsContent value="kanban">
-            <div className="text-center py-12 text-muted-foreground">
-              <LayoutGrid className="h-16 w-16 mx-auto mb-4 opacity-50" />
-              <p>Kanban view coming soon</p>
-            </div>
+          <TabsContent value="kanban" className="mt-6">
+            <DatabaseKanbanView databaseId={databaseId} schema={schema} />
           </TabsContent>
 
-          <TabsContent value="calendar">
-            <div className="text-center py-12 text-muted-foreground">
-              <Calendar className="h-16 w-16 mx-auto mb-4 opacity-50" />
-              <p>Calendar view coming soon</p>
-            </div>
+          <TabsContent value="calendar" className="mt-6">
+            <DatabaseCalendarView databaseId={databaseId} schema={schema} />
           </TabsContent>
 
-          <TabsContent value="list">
-            <div className="text-center py-12 text-muted-foreground">
-              <List className="h-16 w-16 mx-auto mb-4 opacity-50" />
-              <p>List view coming soon</p>
-            </div>
+          <TabsContent value="gallery" className="mt-6">
+            <DatabaseGalleryView databaseId={databaseId} schema={schema} />
+          </TabsContent>
+
+          <TabsContent value="list" className="mt-6">
+            <DatabaseListView databaseId={databaseId} schema={schema} />
           </TabsContent>
         </Tabs>
       </div>
