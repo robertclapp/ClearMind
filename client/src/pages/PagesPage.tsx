@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Plus, Search, FileText, ChevronRight, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
+import { TemplateSelector } from '@/components/TemplateSelector';
+import { PageTemplate } from '@shared/templates';
 
 /**
  * PagesPage displays all pages in the workspace with hierarchical structure.
@@ -16,6 +18,7 @@ export default function PagesPage() {
   const { workspace } = useWorkspace();
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedPages, setExpandedPages] = useState<Set<number>>(new Set());
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
 
   const { data: pageHierarchy, isLoading } = trpc.pages.getHierarchy.useQuery(
     { workspaceId: workspace?.id || 0 },
@@ -31,12 +34,15 @@ export default function PagesPage() {
     },
   });
 
-  const handleCreatePage = async () => {
+  const handleCreatePage = async (template: PageTemplate | null) => {
     if (!workspace) return;
+
+    const title = template ? template.title : 'Untitled Page';
+    const content = template ? JSON.stringify(template.content) : '';
 
     await createPageMutation.mutateAsync({
       workspaceId: workspace.id,
-      title: 'Untitled Page',
+      title,
       position: 0,
     });
   };
@@ -105,7 +111,7 @@ export default function PagesPage() {
               Organize your knowledge with nested pages
             </p>
           </div>
-          <Button onClick={handleCreatePage} disabled={createPageMutation.isPending}>
+          <Button onClick={() => setShowTemplateSelector(true)} disabled={createPageMutation.isPending}>
             <Plus className="h-4 w-4 mr-2" />
             New Page
           </Button>
@@ -144,7 +150,7 @@ export default function PagesPage() {
                 <FileText className="h-16 w-16 mx-auto mb-4 opacity-50" />
                 <p className="text-lg font-medium mb-2">No pages yet</p>
                 <p className="mb-4">Create your first page to get started</p>
-                <Button onClick={handleCreatePage}>
+                <Button onClick={() => setShowTemplateSelector(true)}>
                   <Plus className="h-4 w-4 mr-2" />
                   Create Page
                 </Button>
@@ -153,6 +159,13 @@ export default function PagesPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Template Selector Dialog */}
+      <TemplateSelector
+        open={showTemplateSelector}
+        onClose={() => setShowTemplateSelector(false)}
+        onSelectTemplate={handleCreatePage}
+      />
     </AppLayout>
   );
 }

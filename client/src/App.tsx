@@ -6,9 +6,10 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { WorkspaceProvider } from "./contexts/WorkspaceContext";
 import { OnboardingTutorial } from "./components/OnboardingTutorial";
+import { KeyboardShortcutsPanel } from "./components/KeyboardShortcutsPanel";
 import { useAuth } from "./_core/hooks/useAuth";
 import { getLoginUrl } from "./const";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { initOfflineStorage } from "./lib/offlineStorage";
 
 // Pages
@@ -67,9 +68,24 @@ function Router() {
 }
 
 function App() {
-  // Initialize offline storage on app load
+  const [showShortcuts, setShowShortcuts] = useState(false);
+
+  // Initialize offline storage on app start
   useEffect(() => {
     initOfflineStorage();
+  }, []);
+
+  // Global keyboard shortcut handler (Cmd+K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowShortcuts(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   return (
@@ -83,6 +99,10 @@ function App() {
           <WorkspaceProvider>
             <Router />
             <OnboardingTutorial />
+            <KeyboardShortcutsPanel
+              open={showShortcuts}
+              onClose={() => setShowShortcuts(false)}
+            />
           </WorkspaceProvider>
         </TooltipProvider>
       </ThemeProvider>
