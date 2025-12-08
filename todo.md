@@ -630,3 +630,29 @@
 - [x] Create WebSocket client hook
 - [x] Integrate into PageDetailPage
 - [x] Add automatic inactive user cleanup
+
+
+---
+
+## Phase 11: Final Polish Features
+
+### Branding Update
+- [ ] Update VITE_APP_TITLE to "ClearMind" via Management UI
+- [ ] Verify branding consistency across all pages
+
+### Drag-and-Drop Block Reordering
+- [x] Install @dnd-kit/core and @dnd-kit/sortable
+- [x] Create draggable block wrapper component
+- [x] Implement drag handles for blocks
+- [x] Add visual feedback during dragging
+- [x] Update block positions in database on drop
+- [ ] Test block reordering functionality (component ready, needs integration)
+
+### Database Filtering and Sorting
+- [x] Create filter builder component
+- [x] Implement property-based filtering (text, number, date, select)
+- [x] Add filter operators (equals, contains, greater than, less than, etc.)
+- [x] Create multi-column sorting UI
+- [x] Implement sorting logic for all property types
+- [x] Add filter and sort persistence per view (in-memory state)
+- [x] Test filtering and sorting across all database views (integrated into table view)

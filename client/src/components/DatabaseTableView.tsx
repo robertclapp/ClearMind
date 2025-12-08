@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,6 +28,8 @@ import {
 import { Plus, Trash2, Edit } from 'lucide-react';
 import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/checkbox';
+import { DatabaseFilterBuilder, FilterCondition } from './DatabaseFilterBuilder';
+import { DatabaseSortBuilder, SortCondition } from './DatabaseSortBuilder';
 
 interface DatabaseTableViewProps {
   databaseId: number;
@@ -42,6 +44,8 @@ export function DatabaseTableView({ databaseId, schema }: DatabaseTableViewProps
   const [isAddRowOpen, setIsAddRowOpen] = useState(false);
   const [editingCell, setEditingCell] = useState<{ itemId: number; propId: string } | null>(null);
   const [newRowData, setNewRowData] = useState<Record<string, any>>({});
+  const [filters, setFilters] = useState<FilterCondition[]>([]);
+  const [sorts, setSorts] = useState<SortCondition[]>([]);
 
   const { data: items, refetch } = trpc.databaseItems.getByDatabase.useQuery({
     databaseId,
@@ -199,11 +203,86 @@ export function DatabaseTableView({ databaseId, schema }: DatabaseTableViewProps
     }
   };
 
+  // Apply filters and sorts to items
+  const filteredAndSortedItems = useMemo(() => {
+    if (!items) return [];
+    
+    let result = [...items];
+    
+    // Apply filters
+    if (filters.length > 0) {
+      result = result.filter((item) => {
+        const props = JSON.parse(item.properties);
+        return filters.every((filter) => {
+          const value = props[filter.property];
+          
+          switch (filter.operator) {
+            case 'equals':
+              return String(value) === filter.value;
+            case 'contains':
+              return String(value || '').toLowerCase().includes(filter.value.toLowerCase());
+            case 'startsWith':
+              return String(value || '').toLowerCase().startsWith(filter.value.toLowerCase());
+            case 'endsWith':
+              return String(value || '').toLowerCase().endsWith(filter.value.toLowerCase());
+            case 'greaterThan':
+              return Number(value) > Number(filter.value);
+            case 'lessThan':
+              return Number(value) < Number(filter.value);
+            case 'isEmpty':
+              return !value || value === '';
+            case 'isNotEmpty':
+              return value && value !== '';
+            default:
+              return true;
+          }
+        });
+      });
+    }
+    
+    // Apply sorts
+    if (sorts.length > 0) {
+      result.sort((a, b) => {
+        const propsA = JSON.parse(a.properties);
+        const propsB = JSON.parse(b.properties);
+        
+        for (const sort of sorts) {
+          const valueA = propsA[sort.property];
+          const valueB = propsB[sort.property];
+          
+          let comparison = 0;
+          if (valueA < valueB) comparison = -1;
+          if (valueA > valueB) comparison = 1;
+          
+          if (comparison !== 0) {
+            return sort.direction === 'asc' ? comparison : -comparison;
+          }
+        }
+        return 0;
+      });
+    }
+    
+    return result;
+  }, [items, filters, sorts]);
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <div className="text-sm text-muted-foreground">
-          {items?.length || 0} rows
+        <div className="flex items-center gap-2">
+          <div className="text-sm text-muted-foreground">
+            {filteredAndSortedItems.length} rows
+            {filters.length > 0 && ` (filtered from ${items?.length || 0})`}
+          </div>
+          <DatabaseFilterBuilder
+            properties={properties.map((p: any) => ({ id: p.id, name: p.name, type: p.type }))}
+            filters={filters}
+            onFiltersChange={setFilters}
+          />
+          <DatabaseSortBuilder
+            properties={properties.map((p: any) => ({ id: p.id, name: p.name, type: p.type }))}
+            sorts={sorts}
+            onSortsChange={setSorts}
+          />
         </div>
         <Button onClick={() => setIsAddRowOpen(true)} size="sm">
           <Plus className="h-4 w-4 mr-2" />
@@ -224,8 +303,8 @@ export function DatabaseTableView({ databaseId, schema }: DatabaseTableViewProps
             </TableRow>
           </TableHeader>
           <TableBody>
-            {items && items.length > 0 ? (
-              items.map((item: any) => (
+            {filteredAndSortedItems.length > 0 ? (
+              filteredAndSortedItems.map((item: any) => (
                 <TableRow key={item.id}>
                   {properties.map((prop: any) => (
                     <TableCell key={prop.id}>
