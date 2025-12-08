@@ -4,6 +4,7 @@ import { AppLayout } from '@/components/AppLayout';
 import { BlockEditor } from '@/components/BlockEditor';
 import { CollaborationIndicators, SyncStatusIndicator } from '@/components/CollaborationIndicators';
 import { CommentThread } from '@/components/CommentThread';
+import { AutoSaveIndicator, SaveStatus } from '@/components/AutoSaveIndicator';
 import { trpc } from '@/lib/trpc';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { Button } from '@/components/ui/button';
@@ -28,6 +29,8 @@ export default function PageDetailPage() {
   const [icon, setIcon] = useState('');
   const [content, setContent] = useState('');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
+  const [lastSaved, setLastSaved] = useState<Date>();
 
   const { data: page, isLoading, refetch } = trpc.pages.getById.useQuery(
     { id: pageId },
@@ -49,12 +52,21 @@ export default function PageDetailPage() {
   );
 
   const updatePageMutation = trpc.pages.update.useMutation({
+    onMutate: () => {
+      setSaveStatus('saving');
+    },
     onSuccess: () => {
-      toast.success('Page saved');
+      setSaveStatus('saved');
+      setLastSaved(new Date());
       setHasUnsavedChanges(false);
+      // Reset to idle after 3 seconds
+      setTimeout(() => setSaveStatus('idle'), 3000);
     },
     onError: (error) => {
+      setSaveStatus('error');
       toast.error(`Failed to save: ${error.message}`);
+      // Reset to idle after 5 seconds
+      setTimeout(() => setSaveStatus('idle'), 5000);
     },
   });
 
@@ -177,12 +189,14 @@ export default function PageDetailPage() {
             </div>
           </div>
 
-          {/* Save Button */}
-          {hasUnsavedChanges && (
-            <div className="flex items-center gap-2">
+          {/* Auto-Save Indicator and Save Button */}
+          <div className="flex items-center justify-between">
+            <AutoSaveIndicator status={saveStatus} lastSaved={lastSaved} />
+            {hasUnsavedChanges && (
               <Button
                 onClick={handleSave}
                 disabled={updatePageMutation.isPending}
+                size="sm"
               >
                 {updatePageMutation.isPending ? (
                   <>
@@ -192,15 +206,12 @@ export default function PageDetailPage() {
                 ) : (
                   <>
                     <Save className="h-4 w-4 mr-2" />
-                    Save Changes
+                    Save
                   </>
                 )}
               </Button>
-              <span className="text-sm text-muted-foreground">
-                Unsaved changes
-              </span>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Collaboration Indicators */}

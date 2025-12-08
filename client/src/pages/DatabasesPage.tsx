@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Link } from 'wouter';
 import { AppLayout } from '@/components/AppLayout';
+import { DatabaseTemplateSelector } from '@/components/DatabaseTemplateSelector';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { trpc } from '@/lib/trpc';
+import { DatabaseTemplate } from '@shared/databaseTemplates';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -33,6 +35,7 @@ export default function DatabasesPage() {
   const { workspace } = useWorkspace();
   const [searchQuery, setSearchQuery] = useState('');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isTemplateSelectorOpen, setIsTemplateSelectorOpen] = useState(false);
   
   // Form state
   const [newDbName, setNewDbName] = useState('');
@@ -62,29 +65,49 @@ export default function DatabasesPage() {
     setNewDbIcon('📊');
   };
 
-  const handleCreateDatabase = async () => {
+  const handleTemplateSelect = async (template: DatabaseTemplate | null) => {
     if (!workspace) return;
-    if (!newDbName.trim()) {
-      toast.error('Please enter a database name');
-      return;
-    }
 
-    // Create default schema with basic properties
-    const defaultSchema = JSON.stringify({
-      properties: [
-        { id: '1', name: 'Name', type: 'title', required: true },
-        { id: '2', name: 'Status', type: 'select', options: ['Not Started', 'In Progress', 'Complete'] },
-        { id: '3', name: 'Priority', type: 'select', options: ['Low', 'Medium', 'High'] },
-        { id: '4', name: 'Due Date', type: 'date' },
-      ],
-    });
+    let schema: string;
+    let name: string;
+    let description: string;
+    let icon: string;
+
+    if (template) {
+      // Use template data
+      name = template.name;
+      description = template.description;
+      icon = template.icon;
+      schema = JSON.stringify({
+        properties: template.properties.map((prop, idx) => ({
+          id: String(idx + 1),
+          name: prop.name,
+          type: prop.type,
+          options: prop.options,
+          required: idx === 0, // First property is required
+        })),
+      });
+    } else {
+      // Blank database with default schema
+      name = 'Untitled Database';
+      description = '';
+      icon = '📊';
+      schema = JSON.stringify({
+        properties: [
+          { id: '1', name: 'Name', type: 'text', required: true },
+          { id: '2', name: 'Status', type: 'select', options: ['Not Started', 'In Progress', 'Complete'] },
+          { id: '3', name: 'Priority', type: 'select', options: ['Low', 'Medium', 'High'] },
+          { id: '4', name: 'Due Date', type: 'date' },
+        ],
+      });
+    }
 
     await createDatabaseMutation.mutateAsync({
       workspaceId: workspace.id,
-      name: newDbName,
-      description: newDbDescription || undefined,
-      icon: newDbIcon,
-      schema: defaultSchema,
+      name,
+      description: description || undefined,
+      icon,
+      schema,
     });
   };
 
@@ -104,76 +127,11 @@ export default function DatabasesPage() {
             </p>
           </div>
 
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                New Database
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create Database</DialogTitle>
-                <DialogDescription>
-                  Create a new database to organize your information
-                </DialogDescription>
-              </DialogHeader>
+          <Button onClick={() => setIsTemplateSelectorOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            New Database
+          </Button>
 
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Icon</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className="text-3xl h-auto p-3">
-                        {newDbIcon}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <EmojiPicker
-                        onEmojiClick={(emojiData) => setNewDbIcon(emojiData.emoji)}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="db-name">Name</Label>
-                  <Input
-                    id="db-name"
-                    value={newDbName}
-                    onChange={(e) => setNewDbName(e.target.value)}
-                    placeholder="My Database"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="db-description">Description (optional)</Label>
-                  <Textarea
-                    id="db-description"
-                    value={newDbDescription}
-                    onChange={(e) => setNewDbDescription(e.target.value)}
-                    placeholder="What is this database for?"
-                    rows={3}
-                  />
-                </div>
-              </div>
-
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => setIsCreateDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleCreateDatabase}
-                  disabled={createDatabaseMutation.isPending}
-                >
-                  Create Database
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
         </div>
 
         {/* Search */}
@@ -240,6 +198,13 @@ export default function DatabasesPage() {
           </Card>
         )}
       </div>
+
+      {/* Database Template Selector */}
+      <DatabaseTemplateSelector
+        open={isTemplateSelectorOpen}
+        onClose={() => setIsTemplateSelectorOpen(false)}
+        onSelect={handleTemplateSelect}
+      />
     </AppLayout>
   );
 }

@@ -713,3 +713,27 @@
 - [x] Add keyboard shortcuts for database operations
 - [x] Add visual keyboard shortcut hints
 - [ ] Test keyboard shortcuts across all browsers (ready for testing)
+
+
+---
+
+## Phase 14: Auto-Save & Database Templates
+
+### Auto-Save Indicator
+- [x] Create auto-save status component
+- [x] Implement debounced save logic in page editor
+- [x] Add visual "Saving..." / "Saved" / "Error" states
+- [x] Integrate into PageDetailPage header
+- [x] Test auto-save functionality
+
+### Database Templates
+- [x] Create database templates data structure
+- [x] Build database template selector component
+- [x] Implement project tracker template
+- [x] Implement habit tracker template
+- [x] Implement reading list template
+- [x] Implement expense tracker template
+- [x] Implement contact manager template
+- [x] Implement content calendar template
+- [x] Implement job applications template
+- [x] Integrate templates into database creation flow
