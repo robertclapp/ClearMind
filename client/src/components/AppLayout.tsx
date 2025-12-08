@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
@@ -27,8 +27,10 @@ import {
   Plus,
   ChevronRight,
   Zap,
+  Search,
 } from 'lucide-react';
 import { APP_NAME } from '@shared/const';
+import { SearchModal } from '@/components/SearchModal';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -46,9 +48,23 @@ interface AppLayoutProps {
  */
 export function AppLayout({ children }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [location] = useLocation();
   const { user, logout } = useAuth();
   const { workspace } = useWorkspace();
+
+  // Global search keyboard shortcut (Cmd+Shift+F or Ctrl+Shift+F)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'f') {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleLogout = async () => {
     await logout();
@@ -199,6 +215,18 @@ export function AppLayout({ children }: AppLayoutProps) {
           
           <div className="flex-1" />
 
+          {/* Search Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setSearchOpen(true)}
+            className="gap-2"
+          >
+            <Search className="h-4 w-4" />
+            <span className="hidden sm:inline">Search</span>
+            <kbd className="hidden sm:inline px-2 py-0.5 text-xs bg-muted rounded">⌘⇧F</kbd>
+          </Button>
+
           {/* Notifications */}
           <NotificationCenter />
         </header>
@@ -208,6 +236,9 @@ export function AppLayout({ children }: AppLayoutProps) {
           {children}
         </main>
       </div>
+
+      {/* Global Search Modal */}
+      <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
     </div>
   );
 }

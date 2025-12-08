@@ -122,6 +122,9 @@ export const pages = mysqlTable("pages", {
   /** Soft delete flag */
   archived: boolean("archived").default(false).notNull(),
   
+  /** Timestamp when page was archived (null if not archived) */
+  archivedAt: timestamp("archivedAt"),
+  
   /** User who created this page */
   createdBy: int("createdBy").notNull(),
   

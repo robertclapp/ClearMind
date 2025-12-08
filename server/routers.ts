@@ -4,6 +4,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import * as db from "./db";
+import { globalSearch } from "./search";
 
 /**
  * ClearMind tRPC API Router
@@ -24,15 +25,33 @@ import * as db from "./db";
  * - notifications: Notification management
  * - comments: Collaboration comments
  * - ai: AI-powered features
+ * - search: Global search across all content
  */
 
 export const appRouter = router({
-  system: systemRouter,
+  system: systemRouter,  // ============================================================================
+  // SEARCH
+  // ============================================================================
+
+  search: router({
+    /**
+     * Global search across all content types.
+     */
+    global: protectedProcedure
+      .input(z.object({
+        query: z.string(),
+        workspaceId: z.number(),
+        limit: z.number().optional().default(50),
+      }))
+      .query(async ({ input, ctx }) => {
+        return await globalSearch(input.query, input.workspaceId, ctx.user.id, input.limit);
+      }),
+  }),
 
   // ============================================================================
   // AUTHENTICATION
   // ============================================================================
-  
+
   auth: router({
     /**
      * Get current authenticated user.
@@ -217,6 +236,24 @@ export const appRouter = router({
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input, ctx }) => {
         return await db.archivePage(input.id, ctx.user.id);
+      }),
+
+    /**
+     * Unarchive a page (restore from archive).
+     */
+    unarchive: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        return await db.unarchivePage(input.id, ctx.user.id);
+      }),
+
+    /**
+     * Get archived pages.
+     */
+    getArchived: protectedProcedure
+      .input(z.object({ workspaceId: z.number() }))
+      .query(async ({ input, ctx }) => {
+        return await db.getArchivedPages(input.workspaceId, ctx.user.id);
       }),
   }),
 

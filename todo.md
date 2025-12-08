@@ -58,9 +58,9 @@
 - [x] Add page title editing
 - [x] Add page icon picker (emoji)
 - [x] Add page cover image
-- [ ] Implement page deletion (soft delete)
-- [ ] Add page archiving
-- [ ] Create page search functionality
+  - [ ] Implement page deletion (soft delete)
+  - [x] Add page archiving
+  - [x] Create page search functionality
 - [x] Implement recent pages list
 - [ ] Add favorites/starred pages
 - [ ] Create breadcrumb navigation
@@ -737,3 +737,34 @@
 - [x] Implement content calendar template
 - [x] Implement job applications template
 - [x] Integrate templates into database creation flow
+
+---
+
+## Phase 15: Page Archiving, Global Search & GitHub Repository
+
+### Page Archiving
+- [ ] Add archivedAt field to pages schema
+- [ ] Update pages router with archive/unarchive procedures
+- [ ] Add archive button to page detail view
+- [ ] Create archived pages view
+- [ ] Implement restore from archive functionality
+- [ ] Add archive filter to pages list
+
+### Global Search
+- [ ] Create global search component
+- [ ] Implement Cmd+Shift+F keyboard shortcut
+- [ ] Add search across pages content
+- [ ] Add search across database items
+- [ ] Add search across timeline events
+- [ ] Add search across comments
+- [ ] Implement search result highlighting
+- [ ] Add search filters by type
+
+### GitHub Repository
+- [ ] Initialize git repository
+- [ ] Create .gitignore file
+- [ ] Write comprehensive README.md
+- [ ] Add LICENSE file
+- [ ] Create CONTRIBUTING.md
+- [ ] Push to GitHub repository
+- [ ] Add repository URL to documentation

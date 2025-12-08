@@ -341,8 +341,33 @@ export async function archivePage(id: number, userId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  await db.update(pages).set({ archived: true }).where(eq(pages.id, id));
+  await db.update(pages).set({ archived: true, archivedAt: new Date() }).where(eq(pages.id, id));
   return { success: true };
+}
+
+/**
+ * Unarchive a page (restore from archive).
+ */
+export async function unarchivePage(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.update(pages).set({ archived: false, archivedAt: null }).where(eq(pages.id, id));
+  return { success: true };
+}
+
+/**
+ * Get archived pages for a workspace.
+ */
+export async function getArchivedPages(workspaceId: number, userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db
+    .select()
+    .from(pages)
+    .where(and(eq(pages.workspaceId, workspaceId), eq(pages.archived, true)))
+    .orderBy(desc(pages.archivedAt));
 }
 
 /**
