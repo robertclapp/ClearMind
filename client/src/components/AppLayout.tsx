@@ -56,13 +56,13 @@ export function AppLayout({ children }: AppLayoutProps) {
   };
 
   const navItems = [
-    { href: '/home', label: 'Home', icon: Home },
-    { href: '/pages', label: 'Pages', icon: FileText },
-    { href: '/databases', label: 'Databases', icon: Database },
-    { href: '/timeline', label: 'Timeline', icon: Calendar },
-    { href: '/mood', label: 'Mood Tracker', icon: Smile },
-    { href: '/automations', label: 'Automations', icon: Zap },
-    { href: '/settings', label: 'Settings', icon: Settings },
+    { href: '/home', label: 'Home', icon: Home, dataOnboarding: '' },
+    { href: '/pages', label: 'Pages', icon: FileText, dataOnboarding: 'new-page' },
+    { href: '/databases', label: 'Databases', icon: Database, dataOnboarding: 'new-database' },
+    { href: '/timeline', label: 'Timeline', icon: Calendar, dataOnboarding: 'timeline' },
+    { href: '/mood', label: 'Mood Tracker', icon: Smile, dataOnboarding: 'mood-tracker' },
+    { href: '/automations', label: 'Automations', icon: Zap, dataOnboarding: '' },
+    { href: '/settings', label: 'Settings', icon: Settings, dataOnboarding: 'settings' },
   ];
 
   return (
@@ -109,6 +109,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               return (
                 <Link key={item.href} href={item.href}>
                   <a
+                    data-onboarding={item.dataOnboarding || undefined}
                     className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
                       isActive
                         ? 'bg-primary text-primary-foreground'

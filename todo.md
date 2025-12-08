@@ -656,3 +656,31 @@
 - [x] Implement sorting logic for all property types
 - [x] Add filter and sort persistence per view (in-memory state)
 - [x] Test filtering and sorting across all database views (integrated into table view)
+
+
+---
+
+## Phase 12: Final Features
+
+### Branding Update
+- [ ] Provide instructions for updating VITE_APP_TITLE to "ClearMind" via Management UI
+- [ ] Verify branding consistency after update
+
+### Slash Commands for Block Editor
+- [x] Implement slash command detection in Tiptap editor
+- [x] Create slash command menu component
+- [x] Add block type commands (heading, list, code, quote, etc.)
+- [x] Add keyboard navigation for slash menu
+- [x] Implement command execution
+- [x] Test slash commands in page editor
+
+### Interactive Onboarding Tutorial
+- [x] Create onboarding context and state management
+- [x] Build tutorial overlay component with spotlight effect
+- [x] Implement step-by-step tutorial flow
+- [x] Add tutorial steps for creating first page
+- [x] Add tutorial steps for creating first database
+- [x] Add tutorial steps for creating first timeline event
+- [x] Add skip and restart tutorial options
+- [x] Persist tutorial completion state
+- [x] Test onboarding flow for new users

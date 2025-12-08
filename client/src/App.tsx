@@ -5,6 +5,7 @@ import { Route, Switch, Redirect } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { WorkspaceProvider } from "./contexts/WorkspaceContext";
+import { OnboardingTutorial } from "./components/OnboardingTutorial";
 import { useAuth } from "./_core/hooks/useAuth";
 import { getLoginUrl } from "./const";
 import { useEffect } from "react";
@@ -75,14 +76,15 @@ function App() {
     <ErrorBoundary>
       <ThemeProvider
         defaultTheme="light"
-        defaultSensoryProfile="adhd"
+        // switchable
       >
-        <WorkspaceProvider>
-          <TooltipProvider>
-            <Toaster />
+        <TooltipProvider>
+          <Toaster />
+          <WorkspaceProvider>
             <Router />
-          </TooltipProvider>
-        </WorkspaceProvider>
+            <OnboardingTutorial />
+          </WorkspaceProvider>
+        </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );

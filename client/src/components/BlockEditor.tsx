@@ -5,6 +5,7 @@ import Link from '@tiptap/extension-link';
 import Image from '@tiptap/extension-image';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
+import { SlashCommands } from './SlashCommands';
 import { Button } from '@/components/ui/button';
 import {
   Bold,
@@ -80,6 +81,7 @@ export function BlockEditor({
       TaskItem.configure({
         nested: true,
       }),
+      SlashCommands,
     ],
     content,
     editable,
