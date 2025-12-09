@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRoute } from 'wouter';
 import { AppLayout } from '@/components/AppLayout';
 import { BlockEditor } from '@/components/BlockEditor';
@@ -90,7 +90,7 @@ export default function PageDetailPage() {
     }
   }, [blocks]);
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     if (!page) return;
 
     // Update page title and icon
@@ -116,7 +116,7 @@ export default function PageDetailPage() {
         position: 0,
       });
     }
-  };
+  }, [page, pageId, title, icon, content, blocks, updatePageMutation, updateBlockMutation, createBlockMutation]);
 
   const handleTitleChange = (newTitle: string) => {
     setTitle(newTitle);
@@ -127,6 +127,17 @@ export default function PageDetailPage() {
     setContent(newContent);
     setHasUnsavedChanges(true);
   };
+
+  // Auto-save with debouncing
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+
+    const timer = setTimeout(() => {
+      handleSave();
+    }, 2000); // Auto-save after 2 seconds of inactivity
+
+    return () => clearTimeout(timer);
+  }, [title, content, icon, hasUnsavedChanges, handleSave]);
 
   const handleIconSelect = (emojiData: any) => {
     setIcon(emojiData.emoji);

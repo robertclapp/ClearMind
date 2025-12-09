@@ -95,8 +95,16 @@ export function BlockEditor({
     },
   });
 
+  // Update editor content only when it differs (avoid infinite loops)
   useEffect(() => {
-    if (editor && content !== editor.getHTML()) {
+    if (!editor) return;
+    
+    const currentContent = editor.getHTML();
+    // Only update if content is different and not empty string vs <p></p>
+    const normalizedCurrent = currentContent === '<p></p>' ? '' : currentContent;
+    const normalizedNew = content === '' ? '<p></p>' : content;
+    
+    if (normalizedCurrent !== normalizedNew && normalizedNew !== currentContent) {
       editor.commands.setContent(content);
     }
   }, [content, editor]);

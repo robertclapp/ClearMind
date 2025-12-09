@@ -24,16 +24,26 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
   const { workspace } = useWorkspace();
   const [, setLocation] = useLocation();
   const [query, setQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
+
+  // Debounce search query to reduce API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(query);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [query]);
 
   const { data: results, isLoading } = trpc.search.global.useQuery(
     {
-      query,
+      query: debouncedQuery,
       workspaceId: workspace?.id || 0,
       limit: 50,
     },
     {
-      enabled: !!workspace && query.trim().length > 0,
+      enabled: !!workspace && debouncedQuery.trim().length > 0,
     }
   );
 
@@ -166,7 +176,7 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
 
         {/* Results */}
         <div className="overflow-y-auto max-h-[50vh] px-6 pb-6">
-          {isLoading && query.trim().length > 0 && (
+          {(isLoading || (query.trim().length > 0 && query !== debouncedQuery)) && (
             <div className="flex items-center justify-center py-12 text-muted-foreground">
               <Loader2 className="h-6 w-6 animate-spin mr-2" />
               Searching...

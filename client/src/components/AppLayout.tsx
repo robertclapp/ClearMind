@@ -108,9 +108,9 @@ export function AppLayout({ children }: AppLayoutProps) {
               variant="ghost"
               size="sm"
               onClick={() => setSidebarOpen(false)}
-              className="lg:hidden"
+              aria-label="Close sidebar"
             >
-              <X className="h-4 w-4" />
+              <X className="h-5 w-5" />
             </Button>
           </div>
         </div>
@@ -208,6 +208,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               variant="ghost"
               size="sm"
               onClick={() => setSidebarOpen(true)}
+              aria-label="Open sidebar"
             >
               <Menu className="h-5 w-5" />
             </Button>
@@ -221,6 +222,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             size="sm"
             onClick={() => setSearchOpen(true)}
             className="gap-2"
+            aria-label="Open global search"
           >
             <Search className="h-4 w-4" />
             <span className="hidden sm:inline">Search</span>
