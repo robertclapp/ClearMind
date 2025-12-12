@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
@@ -28,9 +29,12 @@ import {
   ChevronRight,
   Zap,
   Search,
+  Moon,
+  Sun,
 } from 'lucide-react';
 import { APP_NAME } from '@shared/const';
 import { SearchModal } from '@/components/SearchModal';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -52,6 +56,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [location] = useLocation();
   const { user, logout } = useAuth();
   const { workspace } = useWorkspace();
+  const { theme, toggleTheme, switchable } = useTheme();
 
   // Global search keyboard shortcut (Cmd+Shift+F or Ctrl+Shift+F)
   useEffect(() => {
@@ -228,6 +233,27 @@ export function AppLayout({ children }: AppLayoutProps) {
             <span className="hidden sm:inline">Search</span>
             <kbd className="hidden sm:inline px-2 py-0.5 text-xs bg-muted rounded">⌘⇧F</kbd>
           </Button>
+
+          {/* Theme Toggle */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleTheme}
+                aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              >
+                {theme === 'dark' ? (
+                  <Sun className="h-5 w-5" />
+                ) : (
+                  <Moon className="h-5 w-5" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{theme === 'dark' ? 'Light mode' : 'Dark mode'}</p>
+            </TooltipContent>
+          </Tooltip>
 
           {/* Notifications */}
           <NotificationCenter />

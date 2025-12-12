@@ -5,6 +5,7 @@ import { DatabaseKanbanView } from '@/components/DatabaseKanbanView';
 import { DatabaseCalendarView } from '@/components/DatabaseCalendarView';
 import { DatabaseGalleryView } from '@/components/DatabaseGalleryView';
 import { DatabaseListView } from '@/components/DatabaseListView';
+import { Breadcrumb } from '@/components/Breadcrumb';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -52,6 +53,15 @@ export default function DatabaseDetailPage() {
   return (
     <AppLayout>
       <div className="container py-8 space-y-6">
+        {/* Breadcrumb Navigation */}
+        <Breadcrumb
+          items={[
+            { label: 'Databases', href: '/databases' },
+            { label: database.name || 'Untitled' },
+          ]}
+          className="text-muted-foreground"
+        />
+
         {/* Header */}
         <div className="flex items-start gap-4">
           <span className="text-5xl">{database.icon || '📊'}</span>

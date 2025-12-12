@@ -4,10 +4,22 @@ import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Smile, Meh, Frown, TrendingUp, Calendar } from "lucide-react";
-import { useState } from "react";
+import { Smile, Meh, TrendingUp, Calendar, BarChart3 } from "lucide-react";
+import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
-import { format } from "date-fns";
+import { format, subDays, startOfDay } from "date-fns";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Area,
+  AreaChart,
+  ReferenceLine,
+} from "recharts";
 
 /**
  * MoodTrackerPage
@@ -72,12 +84,63 @@ export default function MoodTrackerPage() {
     ? moodEntries.reduce((sum: number, entry: any) => sum + (entry.moodValue || 0), 0) / moodEntries.length
     : 0;
 
+  // Prepare chart data - group by day and calculate average
+  const chartData = useMemo(() => {
+    if (!moodEntries.length) return [];
+
+    // Create a map of date -> mood values
+    const moodByDate = new Map<string, number[]>();
+
+    moodEntries.forEach((entry: any) => {
+      const dateKey = format(new Date(entry.createdAt), "MMM d");
+      const values = moodByDate.get(dateKey) || [];
+      values.push(entry.moodValue || 3);
+      moodByDate.set(dateKey, values);
+    });
+
+    // Convert to array and calculate averages
+    const result: Array<{ date: string; mood: number; count: number }> = [];
+    moodByDate.forEach((values, date) => {
+      result.push({
+        date,
+        mood: Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 10) / 10,
+        count: values.length,
+      });
+    });
+
+    // Sort by date and take last 14 entries
+    return result.slice(-14);
+  }, [moodEntries]);
+
+  // Calculate mood distribution
+  const moodDistribution = useMemo(() => {
+    if (!moodEntries.length) return [];
+
+    const counts: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    moodEntries.forEach((entry: any) => {
+      const value = entry.moodValue || 3;
+      counts[value] = (counts[value] || 0) + 1;
+    });
+
+    return moodOptions.map((option) => ({
+      ...option,
+      count: counts[option.value] || 0,
+      percentage: Math.round((counts[option.value] / moodEntries.length) * 100),
+    }));
+  }, [moodEntries]);
+
   const getMoodEmoji = (value: number) => {
     return moodOptions.find((m) => m.value === value)?.emoji || "😐";
   };
 
   const getMoodLabel = (value: number) => {
     return moodOptions.find((m) => m.value === value)?.label || "Okay";
+  };
+
+  const getMoodColor = (value: number) => {
+    if (value >= 4) return "#22c55e"; // green
+    if (value >= 3) return "#eab308"; // yellow
+    return "#ef4444"; // red
   };
 
   return (
@@ -185,6 +248,102 @@ export default function MoodTrackerPage() {
             </div>
           </Card>
         </div>
+
+        {/* Mood Trend Chart */}
+        {chartData.length > 1 && (
+          <Card className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <BarChart3 className="h-5 w-5 text-primary" />
+              <h2 className="text-xl font-semibold">Mood Trend</h2>
+            </div>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData}>
+                  <defs>
+                    <linearGradient id="moodGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis
+                    dataKey="date"
+                    tick={{ fontSize: 12 }}
+                    className="text-muted-foreground"
+                  />
+                  <YAxis
+                    domain={[1, 5]}
+                    ticks={[1, 2, 3, 4, 5]}
+                    tick={{ fontSize: 12 }}
+                    className="text-muted-foreground"
+                    tickFormatter={(value) => getMoodEmoji(value)}
+                  />
+                  <Tooltip
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0].payload;
+                        return (
+                          <div className="bg-popover border rounded-lg p-3 shadow-lg">
+                            <p className="font-semibold">{data.date}</p>
+                            <p className="text-2xl">{getMoodEmoji(Math.round(data.mood))}</p>
+                            <p className="text-sm text-muted-foreground">
+                              Avg: {data.mood.toFixed(1)} • {data.count} {data.count === 1 ? "entry" : "entries"}
+                            </p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <ReferenceLine
+                    y={3}
+                    stroke="hsl(var(--muted-foreground))"
+                    strokeDasharray="5 5"
+                    strokeOpacity={0.5}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="mood"
+                    stroke="hsl(var(--primary))"
+                    strokeWidth={2}
+                    fill="url(#moodGradient)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+        )}
+
+        {/* Mood Distribution */}
+        {moodDistribution.length > 0 && moodEntries.length > 0 && (
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold mb-4">Mood Distribution</h2>
+            <div className="space-y-3">
+              {moodDistribution.map((item) => (
+                <div key={item.value} className="flex items-center gap-3">
+                  <span className="text-2xl w-10">{item.emoji}</span>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-medium">{item.label}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {item.count} ({item.percentage}%)
+                      </span>
+                    </div>
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{
+                          width: `${item.percentage}%`,
+                          backgroundColor: getMoodColor(item.value),
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
 
         {/* Recent Entries */}
         <Card className="p-6">

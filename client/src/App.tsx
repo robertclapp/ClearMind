@@ -9,35 +9,44 @@ import { OnboardingTutorial } from "./components/OnboardingTutorial";
 import { KeyboardShortcutsPanel } from "./components/KeyboardShortcutsPanel";
 import { useAuth } from "./_core/hooks/useAuth";
 import { getLoginUrl } from "./const";
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense, ComponentType } from "react";
 import { initOfflineStorage } from "./lib/offlineStorage";
+import { PageSkeleton } from "./components/ui/skeleton";
 
-// Pages
-import HomePage from "./pages/HomePage";
-import PagesPage from "./pages/PagesPage";
-import PageDetailPage from "./pages/PageDetailPage";
-import TimelinePage from "./pages/TimelinePage";
-import SettingsPage from "./pages/SettingsPage";
-import DatabasesPage from "./pages/DatabasesPage";
-import DatabaseDetailPage from "./pages/DatabaseDetailPage";
-import MoodTrackerPage from './pages/MoodTrackerPage';
-import AutomationsPage from './pages/AutomationsPage';
+// Lazy-loaded pages for better performance (code splitting)
+const HomePage = lazy(() => import("./pages/HomePage"));
+const PagesPage = lazy(() => import("./pages/PagesPage"));
+const PageDetailPage = lazy(() => import("./pages/PageDetailPage"));
+const TimelinePage = lazy(() => import("./pages/TimelinePage"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const DatabasesPage = lazy(() => import("./pages/DatabasesPage"));
+const DatabaseDetailPage = lazy(() => import("./pages/DatabaseDetailPage"));
+const MoodTrackerPage = lazy(() => import("./pages/MoodTrackerPage"));
+const AutomationsPage = lazy(() => import("./pages/AutomationsPage"));
+
+/**
+ * Loading fallback component for Suspense boundaries.
+ */
+function LoadingFallback() {
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    </div>
+  );
+}
 
 /**
  * ProtectedRoute wrapper ensures user is authenticated.
+ * Uses Suspense for lazy-loaded components.
  */
-function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
+function ProtectedRoute({ component: Component }: { component: ComponentType }) {
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
+    return <LoadingFallback />;
   }
 
   if (!isAuthenticated) {
@@ -45,22 +54,38 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
     return null;
   }
 
-  return <Component />;
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <Component />
+    </Suspense>
+  );
 }
+
+// Pre-create protected route components to avoid recreation on each render
+const ProtectedHomePage = () => <ProtectedRoute component={HomePage} />;
+const ProtectedPagesPage = () => <ProtectedRoute component={PagesPage} />;
+const ProtectedPageDetailPage = () => <ProtectedRoute component={PageDetailPage} />;
+const ProtectedDatabasesPage = () => <ProtectedRoute component={DatabasesPage} />;
+const ProtectedDatabaseDetailPage = () => <ProtectedRoute component={DatabaseDetailPage} />;
+const ProtectedTimelinePage = () => <ProtectedRoute component={TimelinePage} />;
+const ProtectedMoodTrackerPage = () => <ProtectedRoute component={MoodTrackerPage} />;
+const ProtectedAutomationsPage = () => <ProtectedRoute component={AutomationsPage} />;
+const ProtectedSettingsPage = () => <ProtectedRoute component={SettingsPage} />;
+const RedirectToHome = () => <Redirect to="/home" />;
 
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={() => <Redirect to="/home" />} />
-      <Route path="/home" component={() => <ProtectedRoute component={HomePage} />} />
-      <Route path="/pages" component={() => <ProtectedRoute component={PagesPage} />} />
-      <Route path="/pages/:id" component={() => <ProtectedRoute component={PageDetailPage} />} />
-      <Route path="/databases" component={() => <ProtectedRoute component={DatabasesPage} />} />
-      <Route path="/databases/:id" component={() => <ProtectedRoute component={DatabaseDetailPage} />} />
-      <Route path="/timeline" component={() => <ProtectedRoute component={TimelinePage} />} />
-      <Route path="/mood" component={() => <ProtectedRoute component={MoodTrackerPage} />} />
-      <Route path="/automations" component={() => <ProtectedRoute component={AutomationsPage} />} />
-      <Route path="/settings" component={() => <ProtectedRoute component={SettingsPage} />} />
+      <Route path="/" component={RedirectToHome} />
+      <Route path="/home" component={ProtectedHomePage} />
+      <Route path="/pages" component={ProtectedPagesPage} />
+      <Route path="/pages/:id" component={ProtectedPageDetailPage} />
+      <Route path="/databases" component={ProtectedDatabasesPage} />
+      <Route path="/databases/:id" component={ProtectedDatabaseDetailPage} />
+      <Route path="/timeline" component={ProtectedTimelinePage} />
+      <Route path="/mood" component={ProtectedMoodTrackerPage} />
+      <Route path="/automations" component={ProtectedAutomationsPage} />
+      <Route path="/settings" component={ProtectedSettingsPage} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
@@ -92,7 +117,7 @@ function App() {
     <ErrorBoundary>
       <ThemeProvider
         defaultTheme="light"
-        // switchable
+        switchable
       >
         <TooltipProvider>
           <Toaster />

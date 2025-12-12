@@ -5,6 +5,7 @@ import { BlockEditor } from '@/components/BlockEditor';
 import { CollaborationIndicators, SyncStatusIndicator } from '@/components/CollaborationIndicators';
 import { CommentThread } from '@/components/CommentThread';
 import { AutoSaveIndicator, SaveStatus } from '@/components/AutoSaveIndicator';
+import { Breadcrumb } from '@/components/Breadcrumb';
 import { trpc } from '@/lib/trpc';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { Button } from '@/components/ui/button';
@@ -172,6 +173,15 @@ export default function PageDetailPage() {
   return (
     <AppLayout>
       <div className="container max-w-4xl py-8 space-y-6">
+        {/* Breadcrumb Navigation */}
+        <Breadcrumb
+          items={[
+            { label: 'Pages', href: '/pages' },
+            { label: title || 'Untitled' },
+          ]}
+          className="text-muted-foreground"
+        />
+
         {/* Page Header */}
         <div className="space-y-4">
           {/* Icon and Title */}

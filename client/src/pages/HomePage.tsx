@@ -4,9 +4,21 @@ import { AppLayout } from '@/components/AppLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { trpc } from '@/lib/trpc';
-import { FileText, Database, Calendar, Plus, ArrowRight } from 'lucide-react';
-import { Link } from 'wouter';
+import { FileText, Database, Calendar, Plus, ArrowRight, Loader2 } from 'lucide-react';
+import { Link, useLocation } from 'wouter';
 import { APP_NAME, APP_TAGLINE } from '@shared/const';
+import { toast } from 'sonner';
+import { useState } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 /**
  * HomePage displays the main dashboard with quick access to recent items
@@ -15,24 +27,130 @@ import { APP_NAME, APP_TAGLINE } from '@shared/const';
 export default function HomePage() {
   const { user } = useAuth();
   const { workspace } = useWorkspace();
+  const [, setLocation] = useLocation();
+
+  // Dialog states
+  const [isPageDialogOpen, setIsPageDialogOpen] = useState(false);
+  const [isDatabaseDialogOpen, setIsDatabaseDialogOpen] = useState(false);
+  const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
+
+  // Form states
+  const [newPageTitle, setNewPageTitle] = useState('');
+  const [newDatabaseName, setNewDatabaseName] = useState('');
+  const [newEventTitle, setNewEventTitle] = useState('');
+  const [newEventTime, setNewEventTime] = useState('09:00');
 
   // Fetch recent pages
-  const { data: recentPages } = trpc.pages.getRecent.useQuery(
+  const { data: recentPages, refetch: refetchPages } = trpc.pages.getRecent.useQuery(
     { workspaceId: workspace?.id || 0, limit: 5 },
     { enabled: !!workspace }
   );
 
   // Fetch databases
-  const { data: databases } = trpc.databases.getByWorkspace.useQuery(
+  const { data: databases, refetch: refetchDatabases } = trpc.databases.getByWorkspace.useQuery(
     { workspaceId: workspace?.id || 0 },
     { enabled: !!workspace }
   );
 
   // Fetch today's timeline events
-  const { data: todayEvents } = trpc.timeline.getByDate.useQuery(
+  const { data: todayEvents, refetch: refetchEvents } = trpc.timeline.getByDate.useQuery(
     { date: new Date() },
     { enabled: !!user }
   );
+
+  // Create page mutation
+  const createPageMutation = trpc.pages.create.useMutation({
+    onSuccess: (page) => {
+      toast.success('Page created successfully');
+      setIsPageDialogOpen(false);
+      setNewPageTitle('');
+      refetchPages();
+      setLocation(`/pages/${page.id}`);
+    },
+    onError: (error) => {
+      toast.error(`Failed to create page: ${error.message}`);
+    },
+  });
+
+  // Create database mutation
+  const createDatabaseMutation = trpc.databases.create.useMutation({
+    onSuccess: (database) => {
+      toast.success('Database created successfully');
+      setIsDatabaseDialogOpen(false);
+      setNewDatabaseName('');
+      refetchDatabases();
+      setLocation(`/databases/${database.id}`);
+    },
+    onError: (error) => {
+      toast.error(`Failed to create database: ${error.message}`);
+    },
+  });
+
+  // Create event mutation
+  const createEventMutation = trpc.timeline.create.useMutation({
+    onSuccess: () => {
+      toast.success('Event created successfully');
+      setIsEventDialogOpen(false);
+      setNewEventTitle('');
+      setNewEventTime('09:00');
+      refetchEvents();
+    },
+    onError: (error) => {
+      toast.error(`Failed to create event: ${error.message}`);
+    },
+  });
+
+  const handleCreatePage = async () => {
+    if (!newPageTitle.trim()) {
+      toast.error('Please enter a page title');
+      return;
+    }
+    if (!workspace) {
+      toast.error('No workspace found');
+      return;
+    }
+    await createPageMutation.mutateAsync({
+      workspaceId: workspace.id,
+      title: newPageTitle,
+    });
+  };
+
+  const handleCreateDatabase = async () => {
+    if (!newDatabaseName.trim()) {
+      toast.error('Please enter a database name');
+      return;
+    }
+    if (!workspace) {
+      toast.error('No workspace found');
+      return;
+    }
+    await createDatabaseMutation.mutateAsync({
+      workspaceId: workspace.id,
+      name: newDatabaseName,
+      schema: JSON.stringify({
+        properties: [
+          { id: 'title', name: 'Title', type: 'title' },
+          { id: 'status', name: 'Status', type: 'select', options: ['To Do', 'In Progress', 'Done'] },
+        ],
+      }),
+    });
+  };
+
+  const handleCreateEvent = async () => {
+    if (!newEventTitle.trim()) {
+      toast.error('Please enter an event title');
+      return;
+    }
+    const [hours, minutes] = newEventTime.split(':').map(Number);
+    const startTime = new Date();
+    startTime.setHours(hours, minutes, 0, 0);
+
+    await createEventMutation.mutateAsync({
+      title: newEventTitle,
+      startTime,
+      estimatedDuration: 30,
+    });
+  };
 
   return (
     <AppLayout>
@@ -47,7 +165,10 @@ export default function HomePage() {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+          <Card
+            className="hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={() => setIsPageDialogOpen(true)}
+          >
             <CardHeader>
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-primary/10 rounded-lg">
@@ -67,11 +188,14 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+          <Card
+            className="hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={() => setIsDatabaseDialogOpen(true)}
+          >
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-accent/10 rounded-lg">
-                  <Database className="h-6 w-6 text-accent" />
+                <div className="p-2 bg-blue-500/10 rounded-lg">
+                  <Database className="h-6 w-6 text-blue-500" />
                 </div>
                 <div>
                   <CardTitle className="text-lg">New Database</CardTitle>
@@ -87,11 +211,14 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+          <Card
+            className="hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={() => setIsEventDialogOpen(true)}
+          >
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-success/10 rounded-lg">
-                  <Calendar className="h-6 w-6 text-success" />
+                <div className="p-2 bg-green-500/10 rounded-lg">
+                  <Calendar className="h-6 w-6 text-green-500" />
                 </div>
                 <div>
                   <CardTitle className="text-lg">New Event</CardTitle>
@@ -107,6 +234,134 @@ export default function HomePage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Create Page Dialog */}
+        <Dialog open={isPageDialogOpen} onOpenChange={setIsPageDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Page</DialogTitle>
+              <DialogDescription>
+                Enter a title for your new page
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="page-title">Title</Label>
+                <Input
+                  id="page-title"
+                  value={newPageTitle}
+                  onChange={(e) => setNewPageTitle(e.target.value)}
+                  placeholder="My New Page"
+                  onKeyDown={(e) => e.key === 'Enter' && handleCreatePage()}
+                  autoFocus
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsPageDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreatePage} disabled={createPageMutation.isPending}>
+                {createPageMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  'Create Page'
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Create Database Dialog */}
+        <Dialog open={isDatabaseDialogOpen} onOpenChange={setIsDatabaseDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Database</DialogTitle>
+              <DialogDescription>
+                Enter a name for your new database
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="database-name">Name</Label>
+                <Input
+                  id="database-name"
+                  value={newDatabaseName}
+                  onChange={(e) => setNewDatabaseName(e.target.value)}
+                  placeholder="My Database"
+                  onKeyDown={(e) => e.key === 'Enter' && handleCreateDatabase()}
+                  autoFocus
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsDatabaseDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreateDatabase} disabled={createDatabaseMutation.isPending}>
+                {createDatabaseMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  'Create Database'
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Create Event Dialog */}
+        <Dialog open={isEventDialogOpen} onOpenChange={setIsEventDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add New Event</DialogTitle>
+              <DialogDescription>
+                Schedule a new event for today
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="event-title">Title</Label>
+                <Input
+                  id="event-title"
+                  value={newEventTitle}
+                  onChange={(e) => setNewEventTitle(e.target.value)}
+                  placeholder="My Event"
+                  autoFocus
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="event-time">Time</Label>
+                <Input
+                  id="event-time"
+                  type="time"
+                  value={newEventTime}
+                  onChange={(e) => setNewEventTime(e.target.value)}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsEventDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreateEvent} disabled={createEventMutation.isPending}>
+                {createEventMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  'Add Event'
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Recent Pages */}
         <Card>

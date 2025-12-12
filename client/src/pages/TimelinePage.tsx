@@ -40,6 +40,7 @@ export default function TimelinePage() {
   const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [deleteEventId, setDeleteEventId] = useState<number | null>(null);
 
   // Form state for new event
   const [newEventTitle, setNewEventTitle] = useState('');
@@ -113,9 +114,14 @@ export default function TimelinePage() {
     });
   };
 
-  const handleDeleteEvent = async (eventId: number) => {
-    if (confirm('Are you sure you want to delete this event?')) {
-      await deleteEventMutation.mutateAsync({ id: eventId });
+  const handleDeleteEvent = (eventId: number) => {
+    setDeleteEventId(eventId);
+  };
+
+  const confirmDeleteEvent = async () => {
+    if (deleteEventId !== null) {
+      await deleteEventMutation.mutateAsync({ id: deleteEventId });
+      setDeleteEventId(null);
     }
   };
 
@@ -361,6 +367,30 @@ export default function TimelinePage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={deleteEventId !== null} onOpenChange={(open) => !open && setDeleteEventId(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Event</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this event? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDeleteEventId(null)}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={confirmDeleteEvent}
+                disabled={deleteEventMutation.isPending}
+              >
+                {deleteEventMutation.isPending ? 'Deleting...' : 'Delete'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
   );

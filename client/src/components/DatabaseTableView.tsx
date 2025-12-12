@@ -73,9 +73,18 @@ export function DatabaseTableView({ databaseId, schema }: DatabaseTableViewProps
     },
   });
 
-  // TODO: Add delete mutation when implemented in router
+  const archiveItemMutation = trpc.databaseItems.archive.useMutation({
+    onSuccess: () => {
+      toast.success('Row deleted');
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(`Failed to delete row: ${error.message}`);
+    },
+  });
+
   const handleDeleteRow = async (itemId: number) => {
-    toast.info('Delete functionality coming soon');
+    await archiveItemMutation.mutateAsync({ id: itemId });
   };
 
   const properties = schema?.properties || [];

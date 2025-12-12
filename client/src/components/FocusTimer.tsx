@@ -3,23 +3,73 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Play, Pause, RotateCcw, Clock } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Play, Pause, RotateCcw, Clock, TrendingUp } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+const STORAGE_KEY = "clearmind-focus-timer";
+
+interface TimerState {
+  sessionsToday: number;
+  totalFocusMinutes: number;
+  lastSessionDate: string;
+  streak: number;
+}
+
+function getStoredState(): TimerState {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      const state = JSON.parse(stored) as TimerState;
+      const today = new Date().toDateString();
+      // Reset daily count if it's a new day
+      if (state.lastSessionDate !== today) {
+        // Check if yesterday to maintain streak
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const isYesterday = state.lastSessionDate === yesterday.toDateString();
+        return {
+          ...state,
+          sessionsToday: 0,
+          lastSessionDate: today,
+          streak: isYesterday ? state.streak : 0,
+        };
+      }
+      return state;
+    }
+  } catch (e) {
+    console.error("Failed to parse timer state:", e);
+  }
+  return {
+    sessionsToday: 0,
+    totalFocusMinutes: 0,
+    lastSessionDate: new Date().toDateString(),
+    streak: 0,
+  };
+}
+
+function saveState(state: TimerState) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch (e) {
+    console.error("Failed to save timer state:", e);
+  }
+}
 
 /**
  * FocusTimer Component
- * 
+ *
  * Pomodoro-style focus timer to help users maintain concentration.
  * Supports custom durations and automatic break reminders.
- * 
+ *
  * Features:
  * - Pomodoro technique (25min focus, 5min break)
  * - Custom timer durations
  * - Visual countdown display
  * - Audio/visual notifications
- * - Session tracking
+ * - Session tracking with persistence
  * - Flexible scheduling (no rigid pressure)
+ * - Daily streak tracking
  */
 
 interface FocusTimerProps {
@@ -32,9 +82,10 @@ export function FocusTimer({ onComplete, className }: FocusTimerProps) {
   const [isRunning, setIsRunning] = useState(false);
   const [timeLeft, setTimeLeft] = useState(25 * 60); // 25 minutes in seconds
   const [customMinutes, setCustomMinutes] = useState(25);
-  const [sessionsCompleted, setSessionsCompleted] = useState(0);
-  
+  const [timerState, setTimerState] = useState<TimerState>(getStoredState);
+
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const sessionStartTimeRef = useRef<number | null>(null);
 
   // Preset durations
   const presets = {
@@ -74,11 +125,27 @@ export function FocusTimer({ onComplete, className }: FocusTimerProps) {
     };
   }, [isRunning, timeLeft]);
 
-  const handleTimerComplete = () => {
+  const handleTimerComplete = useCallback(() => {
     setIsRunning(false);
-    
+
     if (mode === "focus") {
-      setSessionsCompleted((prev) => prev + 1);
+      // Calculate actual focus time
+      const focusMinutes = sessionStartTimeRef.current
+        ? Math.round((Date.now() - sessionStartTimeRef.current) / 60000)
+        : customMinutes;
+
+      setTimerState((prev) => {
+        const newState = {
+          ...prev,
+          sessionsToday: prev.sessionsToday + 1,
+          totalFocusMinutes: prev.totalFocusMinutes + focusMinutes,
+          lastSessionDate: new Date().toDateString(),
+          streak: prev.sessionsToday === 0 ? prev.streak + 1 : prev.streak,
+        };
+        saveState(newState);
+        return newState;
+      });
+
       toast.success("Focus session complete! Time for a break.", {
         duration: 5000,
       });
@@ -89,22 +156,28 @@ export function FocusTimer({ onComplete, className }: FocusTimerProps) {
       });
     }
 
+    sessionStartTimeRef.current = null;
+
     // Play notification sound (browser notification API)
     if ("Notification" in window && Notification.permission === "granted") {
       new Notification("ClearMind Timer", {
-        body: mode === "focus" 
-          ? "Focus session complete! Take a break." 
-          : "Break complete! Ready to focus?",
+        body:
+          mode === "focus"
+            ? "Focus session complete! Take a break."
+            : "Break complete! Ready to focus?",
         icon: "/favicon.ico",
       });
     }
-  };
+  }, [mode, customMinutes, onComplete]);
 
   const startTimer = () => {
     if (timeLeft === 0) {
       resetTimer();
     }
     setIsRunning(true);
+    if (mode === "focus") {
+      sessionStartTimeRef.current = Date.now();
+    }
 
     // Request notification permission
     if ("Notification" in window && Notification.permission === "default") {
@@ -294,14 +367,34 @@ export function FocusTimer({ onComplete, className }: FocusTimerProps) {
         </div>
 
         {/* Stats */}
-        <div className="pt-4 border-t">
+        <div className="pt-4 border-t space-y-3">
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2 text-muted-foreground">
               <Clock className="h-4 w-4" />
-              <span>Sessions completed today</span>
+              <span>Sessions today</span>
             </div>
-            <span className="font-semibold">{sessionsCompleted}</span>
+            <span className="font-semibold">{timerState.sessionsToday}</span>
           </div>
+          <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <TrendingUp className="h-4 w-4" />
+              <span>Total focus time</span>
+            </div>
+            <span className="font-semibold">
+              {timerState.totalFocusMinutes >= 60
+                ? `${Math.floor(timerState.totalFocusMinutes / 60)}h ${timerState.totalFocusMinutes % 60}m`
+                : `${timerState.totalFocusMinutes}m`}
+            </span>
+          </div>
+          {timerState.streak > 0 && (
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <span>🔥</span>
+                <span>Current streak</span>
+              </div>
+              <span className="font-semibold">{timerState.streak} days</span>
+            </div>
+          )}
         </div>
       </div>
     </Card>
